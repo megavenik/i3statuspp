@@ -1,0 +1,111 @@
+From d9eb1fff3f87e56e27acda10ca11a2d13a62037e Mon Sep 17 00:00:00 2001
+From: Dmitry Chumak <mega.venik@gmail.com>
+Date: Sun, 5 May 2013 00:41:23 +0900
+Subject: [PATCH 1/2] primitive plugin system
+
+---
+ src/print_plugin_output.c | 38 ++++++++++++++++++++++++++++++++++++++
+ 1 file changed, 38 insertions(+)
+ create mode 100644 src/print_plugin_output.c
+
+diff --git a/src/print_plugin_output.c b/src/print_plugin_output.c
+new file mode 100644
+index 0000000..a5f1459
+--- /dev/null
++++ b/src/print_plugin_output.c
+@@ -0,0 +1,38 @@
++// vim:ts=8:expandtab
++#include "i3status.h"
++#include <stdlib.h>
++#include <stdio.h>
++#include <string.h>
++#include <sys/stat.h>
++#include <yajl/yajl_gen.h>
++#include <yajl/yajl_version.h>
++
++void print_plugin_output(yajl_gen json_gen, char *buffer, const char *name, const char *plugins_path) {
++    char *outwalk = buffer;
++    char fname[sizeof(plugins_path)+sizeof(name)+2];
++    char status[1024];
++
++    sprintf(fname, "%s/%s", plugins_path, name);
++
++    if (access(fname, F_OK) != -1) {
++        if (access(fname, X_OK) != -1) {
++            FILE *fp;
++            char output[1024];
++            fp = popen(fname, "r");
++            if (fp != NULL) {
++                while (fgets(output, sizeof(output), fp) != NULL) {
++                    strcpy(status, output);
++                }
++            }
++
++            pclose(fp);
++        } else {
++            strcpy(status, "file exist, but isn't executable");
++        }
++    } else {
++        strcpy(status, "lol, nope");
++    }
++    
++    OUTPUT_FULL_TEXT(status);
++    return;
++}
+\ No newline at end of file
+-- 
+1.8.2
+
+
+From 6cc13027237f2b1d4f7b6b17c2fadc441371a952 Mon Sep 17 00:00:00 2001
+From: Dmitry Chumak <mega.venik@gmail.com>
+Date: Sun, 5 May 2013 00:41:52 +0900
+Subject: [PATCH 2/2] primitive plugin system
+
+---
+ i3status.c | 15 +++++++++++++++
+ 1 file changed, 15 insertions(+)
+
+diff --git a/i3status.c b/i3status.c
+index df233f7..1dc51f2 100644
+--- a/i3status.c
++++ b/i3status.c
+@@ -197,6 +197,12 @@ int main(int argc, char *argv[]) {
+                 CFG_STR("color_separator", "#333333", CFGF_NONE),
+                 CFG_INT("interval", 1, CFGF_NONE),
+                 CFG_COLOR_OPTS("#00FF00", "#FFFF00", "#FF0000"),
++                CFG_STR("plugins_path", "/etc/i3status/plugins", CFGF_NONE),
++                CFG_END()
++        };
++
++        cfg_opt_t plugin_opts[] = {
++                CFG_STR("plugins_list", "1,2,3", CFGF_NONE),
+                 CFG_END()
+         };
+ 
+@@ -293,6 +299,7 @@ int main(int argc, char *argv[]) {
+         cfg_opt_t opts[] = {
+                 CFG_STR_LIST("order", "{}", CFGF_NONE),
+                 CFG_SEC("general", general_opts, CFGF_NONE),
++                CFG_SEC("plugin", plugin_opts, CFGF_TITLE | CFGF_MULTI),
+                 CFG_SEC("run_watch", run_watch_opts, CFGF_TITLE | CFGF_MULTI),
+                 CFG_SEC("wireless", wireless_opts, CFGF_TITLE | CFGF_MULTI),
+                 CFG_SEC("ethernet", ethernet_opts, CFGF_TITLE | CFGF_MULTI),
+@@ -505,6 +512,14 @@ int main(int argc, char *argv[]) {
+                                 print_cpu_usage(json_gen, buffer, cfg_getstr(sec, "format"));
+                                 SEC_CLOSE_MAP;
+                         }
++
++                        CASE_SEC_TITLE("plugin") {
++                                SEC_OPEN_MAP("plugin");
++                                print_plugin_output(json_gen, buffer, title, cfg_getstr(cfg_general, "plugins_path"));
++                                SEC_CLOSE_MAP;
++                        }
++
++                        // printf(cfg_getstr(cfg_general, "plugins_path"));
+                 }
+                 if (output_format == O_I3BAR) {
+                         yajl_gen_array_close(json_gen);
+-- 
+1.8.2
+
