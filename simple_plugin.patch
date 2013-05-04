@@ -12,7 +12,7 @@ diff --git a/src/print_plugin_output.c b/src/print_plugin_output.c
 new file mode 100644
 index 0000000..a5f1459
 --- /dev/null
-+++ b/src/print_plugin_output.c
++++ src/print_plugin_output.c
 @@ -0,0 +1,38 @@
 +// vim:ts=8:expandtab
 +#include "i3status.h"
@@ -25,7 +25,7 @@ index 0000000..a5f1459
 +
 +void print_plugin_output(yajl_gen json_gen, char *buffer, const char *name, const char *plugins_path) {
 +    char *outwalk = buffer;
-+    char fname[sizeof(plugins_path)+sizeof(name)+2];
++    char fname[strlen(plugins_path)+strlen(name)+2];
 +    char status[1024];
 +
 +    sprintf(fname, "%s/%s", plugins_path, name);
@@ -68,8 +68,8 @@ Subject: [PATCH 2/2] primitive plugin system
 
 diff --git a/i3status.c b/i3status.c
 index df233f7..1dc51f2 100644
---- a/i3status.c
-+++ b/i3status.c
+--- i3status.c
++++ i3status.c
 @@ -197,6 +197,12 @@ int main(int argc, char *argv[]) {
                  CFG_STR("color_separator", "#333333", CFGF_NONE),
                  CFG_INT("interval", 1, CFGF_NONE),
