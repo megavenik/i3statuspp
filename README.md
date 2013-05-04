@@ -1,9 +1,39 @@
 i3statuspp
 ==========
 
-i3status plugin patch
+i3status plugin patch. Adds support of third-party plugins to the i3status.
 
-Config example:
+#### Plugin structure:
+
+* It should be executable
+* It should accept no parameters
+* It should print the pure resulting string to STDOUT (no trailing NL simbols and any other crap)
+* All plugins should be placed in one folder (exact plugin folder could be set in i3status.conf)
+
+## Installing
+
+Get the proper version of the i3status source code [here](http://i3wm.org/i3status/):
+```bash
+wget http://i3wm.org/i3status/i3status-2.7.tar.bz2
+tar xjvf http://i3wm.org/i3status/i3status-2.7.tar.bz2
+```
+
+Clone this repo:
+
+```bash
+git clone https://github.com/megavenik/i3statuspp.git
+```
+
+Patch the original sources:
+
+```bash
+cd i3status-2.7
+patch -p0 < ../i3statuspp/simple_plugin.patch
+```
+
+And build i3status!:)
+
+## Config example:
 
     general {
         colors = true
